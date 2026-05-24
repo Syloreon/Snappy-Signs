@@ -1,0 +1,33 @@
+# Build output
+bin/
+obj/
+
+# Thunderstore package output (zip is a build artifact; manifest.json + icon.png are tracked)
+dist/
+
+# Decompiled game sources used only as a local reference
+.decomp/
+
+# Downloaded/extracted tooling (e.g. BepInEx pack)
+.tmp/
+
+# IDE
+.vs/
+.idea/
+*.user
+
+# Tools
+.dotnet/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# --- Secrets (belt-and-suspenders; gitleaks hook is the real guard) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+appsettings.*.local.json
+secrets.json

@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>SnappySigns</AssemblyName>
+    <Product>Snappy Signs</Product>
+    <Version>1.0.0</Version>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>SnappySigns</RootNamespace>
+
+    <!-- Plugin DLL lands directly in bin\<Config> with no framework subfolder -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+
+    <!-- Quiet down warnings caused by referencing the game's net-framework assemblies -->
+    <NoWarn>$(NoWarn);MSB3277;NU1701</NoWarn>
+
+    <!--
+      Path to the Valheim install. Override on the command line with
+      `dotnet build -p:ValheimInstall=...` or via the VALHEIM_INSTALL env var.
+    -->
+    <ValheimInstall Condition="'$(ValheimInstall)' == ''">$(VALHEIM_INSTALL)</ValheimInstall>
+    <ValheimInstall Condition="'$(ValheimInstall)' == ''">F:\SteamLibrary\steamapps\common\Valheim</ValheimInstall>
+    <ManagedDir>$(ValheimInstall)\valheim_Data\Managed</ManagedDir>
+
+    <!--
+      Optional: where to copy the built DLL after a build. Defaults to the game's
+      BepInEx plugins folder. Override with -p:DeployDir=... or env SNAPPYSIGNS_DEPLOY.
+    -->
+    <DeployDir Condition="'$(DeployDir)' == ''">$(SNAPPYSIGNS_DEPLOY)</DeployDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- BepInEx + HarmonyX (compile-time only; the user's installed BepInEx provides these at runtime) -->
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Game + Unity assemblies referenced locally; never copied into the output. -->
+    <Reference Include="assembly_valheim">
+      <HintPath>$(ManagedDir)\assembly_valheim.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedDir)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Fail early with a clear message if the game assemblies can't be found. -->
+  <Target Name="CheckValheimRefs" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(ManagedDir)\assembly_valheim.dll')"
+           Text="Could not find assembly_valheim.dll under '$(ManagedDir)'. Set the Valheim path with -p:ValheimInstall=... or the VALHEIM_INSTALL environment variable." />
+  </Target>
+
+  <!-- Copy the plugin to the deploy folder after build, if one is configured. -->
+  <Target Name="DeployPlugin" AfterTargets="Build" Condition="'$(DeployDir)' != ''">
+    <MakeDir Directories="$(DeployDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DeployDir)" OverwriteReadOnlyFiles="true" />
+    <Message Importance="high" Text="Deployed $(TargetFileName) -> $(DeployDir)" />
+  </Target>
+
+</Project>

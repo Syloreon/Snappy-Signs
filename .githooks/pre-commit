@@ -1,0 +1,26 @@
+#!/bin/sh
+# Pre-commit: block secrets from being committed (gitleaks).
+# Resolve gitleaks from PATH first, then known winget install locations.
+GITLEAKS="$(command -v gitleaks 2>/dev/null)"
+if [ -z "$GITLEAKS" ]; then
+  for c in \
+    "$LOCALAPPDATA/Microsoft/WinGet/Links/gitleaks.exe" \
+    "$LOCALAPPDATA/Microsoft/WinGet/Packages/Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe/gitleaks.exe"; do
+    if [ -f "$c" ]; then GITLEAKS="$c"; break; fi
+  done
+fi
+if [ -z "$GITLEAKS" ]; then
+  echo "WARNING: gitleaks not found on PATH; skipping secret scan." >&2
+  echo "  Install: winget install Gitleaks.Gitleaks  (then restart your shell)" >&2
+  exit 0
+fi
+
+"$GITLEAKS" git --staged --no-banner --redact
+status=$?
+if [ "$status" -ne 0 ]; then
+  echo "" >&2
+  echo "COMMIT BLOCKED: gitleaks found a potential secret in staged changes." >&2
+  echo "  - Remove the secret, or move it to an env var / ignored file." >&2
+  echo "  - False positive? Add a gitleaks allowlist entry, or 'git commit --no-verify' (last resort)." >&2
+fi
+exit "$status"
