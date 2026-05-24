@@ -60,3 +60,7 @@ The compiled `SnappySigns.dll` is written to `bin/Release/`.
 - Snap points are placed on the board's mid-plane. For signs that include a mounting post
   in the same mesh, the computed board face may include the post; this is fine for the
   common wood sign but may be refined later.
+
+## Development
+
+Developed with AI assistance (Claude). This mod is tagged **AI Generated** on Thunderstore.
